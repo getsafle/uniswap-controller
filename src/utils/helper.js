@@ -15,7 +15,7 @@ const getRequest = async ({ url }) => {
     }
 };
 
-const rawTransaction = async (_walletAddress, fromQuantity, slippageTolerance = 1) => {
+const transactionBuilder = async (_walletAddress, fromQuantity, slippageTolerance = 1) => {
 
     try {
         const V3_SWAP_ROUTER_ADDRESS = '0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45';
@@ -54,15 +54,22 @@ const rawTransaction = async (_walletAddress, fromQuantity, slippageTolerance = 
             }
         );
 
-        console.log(`Quote Exact In: ${route.quote.toFixed(2)}`);
-        console.log(`Gas Adjusted Quote In: ${route.quoteGasAdjusted.toFixed(2)}`);
-        console.log(`Gas Used USD: ${route.estimatedGasUsedUSD.toFixed(6)}`);
+        return { route, to: V3_SWAP_ROUTER_ADDRESS, from: MY_ADDRESS };
 
+    } catch (error) {
+        throw { error }
+    }
+
+}
+
+const rawTransaction = async (_walletAddress, fromQuantity, slippageTolerance = 1) => {
+    try {
+        const { route, to, from } = await transactionBuilder(_walletAddress, fromQuantity, slippageTolerance)
         const response = {
             data: route.methodParameters.calldata,
-            to: V3_SWAP_ROUTER_ADDRESS,
+            to,
             value: BigNumber.from(route.methodParameters.value),
-            from: MY_ADDRESS,
+            from,
             gasPrice: BigNumber.from(route.gasPriceWei),
         };
 
@@ -70,7 +77,6 @@ const rawTransaction = async (_walletAddress, fromQuantity, slippageTolerance = 
     } catch (error) {
         return { error }
     }
-
 }
 
 module.exports = { getRequest, rawTransaction };
