@@ -15,11 +15,10 @@ const getRequest = async ({ url }) => {
     }
 };
 
-const transactionBuilder = async (_walletAddress, fromQuantity, slippageTolerance = 1) => {
+const transactionBuilder = async (walletAddress, fromQuantity, slippageTolerance = 1) => {
 
     try {
         const V3_SWAP_ROUTER_ADDRESS = '0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45';
-        const MY_ADDRESS = _walletAddress;
         const web3Provider = new ethers.providers.JsonRpcProvider("https://mainnet.infura.io/v3/5583a1ce54604375b02d6246936d9d53");
 
         const router = new AlphaRouter({ chainId: 1, provider: web3Provider });
@@ -43,18 +42,25 @@ const transactionBuilder = async (_walletAddress, fromQuantity, slippageToleranc
         const typedValueParsed = fromQuantity.toString()
         const wethAmount = CurrencyAmount.fromRawAmount(WETH, typedValueParsed);
 
+        const routeOptions = !walletAddress || walletAddress === "" ? {
+            slippageTolerance: new Percent(slippageTolerance, 100),
+            deadline: 100
+        } : {
+            recipient: walletAddress,
+            slippageTolerance: new Percent(slippageTolerance, 100),
+            deadline: 100
+        }
+
         const route = await router.route(
             wethAmount,
             USDC,
             TradeType.EXACT_IN,
             {
-                recipient: _walletAddress,
-                slippageTolerance: new Percent(slippageTolerance, 100),
-                deadline: 100
+                ...routeOptions
             }
         );
 
-        return { route, to: V3_SWAP_ROUTER_ADDRESS, from: MY_ADDRESS };
+        return { route, to: V3_SWAP_ROUTER_ADDRESS, from: walletAddress };
 
     } catch (error) {
         throw { error }
@@ -79,5 +85,20 @@ const rawTransaction = async (_walletAddress, fromQuantity, slippageTolerance = 
     }
 }
 
-module.exports = { getRequest, rawTransaction };
+const getExchangeRate = async (fromQuantity, slippageTolerance = 1) => {
+    try {
+        const { route } = await transactionBuilder(null, fromQuantity, slippageTolerance)
+        const response = {
+            toTokenAmount: route.quote.toExact(),
+            fromTokenAmount: fromQuantity,
+            estimatedGas: BigNumber.from(route.estimatedGasUsed)
+        };
+
+        return { response };
+    } catch (error) {
+        return { error }
+    }
+}
+
+module.exports = { getRequest, rawTransaction, getExchangeRate };
 
