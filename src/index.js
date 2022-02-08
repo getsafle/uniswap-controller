@@ -20,6 +20,15 @@ class Uniswap {
         return response;
     }
 
+    async getEstimatedGas(_toToken, _fromToken, quantity) {
+        const toToken = web3Utils.toChecksumAddress(_toToken)
+        const fromToken = web3Utils.toChecksumAddress(_fromToken)
+        const { response, error } = await helper.getEstimatedGas(quantity);
+        if (error)
+            throw error
+        return { estimatedGas: response.estimatedGas };
+    }
+
     async getRawTransaction(_walletAddress, _toContractAddress, _fromContractAddress, toQuantity, fromQuantity, slippageTolerance = 1) {
         const toContractAddress = web3Utils.toChecksumAddress(_toContractAddress)
         const fromContractAddress = web3Utils.toChecksumAddress(_fromContractAddress)

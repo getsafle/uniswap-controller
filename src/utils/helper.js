@@ -100,5 +100,18 @@ const getExchangeRate = async (fromQuantity, slippageTolerance = 1) => {
     }
 }
 
-module.exports = { getRequest, rawTransaction, getExchangeRate };
+const getEstimatedGas = async (fromQuantity, slippageTolerance = 1) => {
+    try {
+        const { route } = await transactionBuilder(null, fromQuantity, slippageTolerance)
+        const response = {
+            estimatedGas: BigNumber.from(route.estimatedGasUsed)
+        };
+
+        return { response };
+    } catch (error) {
+        return { error }
+    }
+}
+
+module.exports = { getRequest, rawTransaction, getExchangeRate, getEstimatedGas };
 
