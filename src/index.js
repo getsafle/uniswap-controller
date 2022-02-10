@@ -29,10 +29,17 @@ class Uniswap {
         return response;
     }
 
-    async getEstimatedGas(_toToken, _fromToken, quantity) {
-        const toToken = web3Utils.toChecksumAddress(_toToken)
-        const fromToken = web3Utils.toChecksumAddress(_fromToken)
-        const { response, error } = await helper.getEstimatedGas(quantity);
+    async getEstimatedGas({ toContractAddress, toContractDecimal, fromContractAddress, fromContractDecimal, fromQuantity, slippageTolerance = 1 }) {
+        const _toContractAddress = web3Utils.toChecksumAddress(toContractAddress)
+        const _fromContractAddress = web3Utils.toChecksumAddress(fromContractAddress)
+        const { response, error } = await helper.getEstimatedGas({
+            toContractAddress: _toContractAddress,
+            toContractDecimal,
+            fromContractAddress: _fromContractAddress,
+            fromContractDecimal,
+            fromQuantity,
+            slippageTolerance
+        });
         if (error)
             throw error
         return { estimatedGas: response.estimatedGas };
