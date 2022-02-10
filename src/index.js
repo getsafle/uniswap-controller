@@ -20,11 +20,21 @@ class Uniswap {
         return response;
     }
 
-    async getRawTransaction(_walletAddress, _toContractAddress, _fromContractAddress, toQuantity, fromQuantity, slippageTolerance = 1) {
-        const toContractAddress = web3Utils.toChecksumAddress(_toContractAddress)
-        const fromContractAddress = web3Utils.toChecksumAddress(_fromContractAddress)
-        const walletAddress = web3Utils.toChecksumAddress(_walletAddress)
-        const { response, error } = await helper.rawTransaction(walletAddress, fromQuantity);
+    async getRawTransaction({ walletAddress, toContractAddress, toContractDecimal, fromContractAddress, fromContractDecimal, toQuantity, fromQuantity, slippageTolerance = 1 }) {
+        const _toContractAddress = web3Utils.toChecksumAddress(toContractAddress)
+        const _fromContractAddress = web3Utils.toChecksumAddress(fromContractAddress)
+        const _walletAddress = web3Utils.toChecksumAddress(walletAddress)
+        const { response, error } = await helper.rawTransaction(
+            {
+                walletAddress: _walletAddress,
+                toContractAddress: _toContractAddress,
+                toContractDecimal,
+                fromContractAddress: _fromContractAddress,
+                fromContractDecimal,
+                toQuantity,
+                fromQuantity,
+                slippageTolerance
+            });
         if (error)
             throw error
         return response;
