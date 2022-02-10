@@ -107,9 +107,25 @@ const rawTransaction = async ({
     }
 }
 
-const getExchangeRate = async (fromQuantity, slippageTolerance = 1) => {
+const getExchangeRate = async ({
+    toContractAddress,
+    toContractDecimal,
+    fromContractAddress,
+    fromContractDecimal,
+    fromQuantity,
+    slippageTolerance = 1
+}) => {
     try {
-        const { route } = await transactionBuilder(null, fromQuantity, slippageTolerance)
+        const { route } = await transactionBuilder({
+            walletAddress: null,
+            toContractAddress,
+            toContractDecimal,
+            fromContractAddress,
+            fromContractDecimal,
+            toQuantity: 0,
+            fromQuantity,
+            slippageTolerance
+        })
         const response = {
             toTokenAmount: route.quote.toExact(),
             fromTokenAmount: fromQuantity,
@@ -123,4 +139,3 @@ const getExchangeRate = async (fromQuantity, slippageTolerance = 1) => {
 }
 
 module.exports = { getRequest, rawTransaction, getExchangeRate };
-
