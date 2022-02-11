@@ -98,11 +98,9 @@ const rawTransaction = async ({
             data: route.methodParameters.calldata,
             to,
             value: web3Utils.hexToNumber(BigNumber.from(route.methodParameters.value)._hex), // value of ether to send
-            // BigNumber.from(route.methodParameters.value),
             from,
             gas: web3Utils.hexToNumber(route.estimatedGasUsed._hex),
             gasPrice: web3Utils.hexToNumber(route.gasPriceWei._hex)
-            // BigNumber.from(route.gasPriceWei),
         };
 
         return { response };
