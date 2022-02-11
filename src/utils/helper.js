@@ -3,6 +3,7 @@ const { AlphaRouter } = require("@uniswap/smart-order-router");
 const { Token, CurrencyAmount, TradeType, Percent } = require('@uniswap/sdk-core')
 const { ethers, BigNumber } = require('ethers')
 const { MAINNET_CHAIN_ID, V3_SWAP_ROUTER_ADDRESS } = require('./const')
+const web3Utils = require('web3-utils')
 
 const getRequest = async ({ url }) => {
     try {
@@ -96,9 +97,12 @@ const rawTransaction = async ({
         const response = {
             data: route.methodParameters.calldata,
             to,
-            value: BigNumber.from(route.methodParameters.value),
+            value: web3Utils.hexToNumber(BigNumber.from(route.methodParameters.value)._hex), // value of ether to send
+            // BigNumber.from(route.methodParameters.value),
             from,
-            gasPrice: BigNumber.from(route.gasPriceWei),
+            gas: web3Utils.hexToNumber(route.estimatedGasUsed._hex),
+            gasPrice: web3Utils.hexToNumber(route.gasPriceWei._hex)
+            // BigNumber.from(route.gasPriceWei),
         };
 
         return { response };
@@ -127,9 +131,9 @@ const getExchangeRate = async ({
             slippageTolerance
         })
         const response = {
-            toTokenAmount: route.quote.toExact(),
+            toTokenAmount: Number(route.quote.toExact()) * (10 ** toContractDecimal),
             fromTokenAmount: fromQuantity,
-            estimatedGas: BigNumber.from(route.estimatedGasUsed)
+            estimatedGas: web3Utils.hexToNumber(route.estimatedGasUsed._hex)
         };
 
         return { response };
@@ -158,7 +162,7 @@ const getEstimatedGas = async ({
             slippageTolerance
         })
         const response = {
-            estimatedGas: BigNumber.from(route.estimatedGasUsed)
+            estimatedGas: web3Utils.hexToNumber(route.estimatedGasUsed._hex)
         };
 
         return { response };
