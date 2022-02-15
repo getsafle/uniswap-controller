@@ -97,10 +97,10 @@ const rawTransaction = async ({
         const response = {
             data: route.methodParameters.calldata,
             to,
-            value: web3Utils.hexToNumber(BigNumber.from(route.methodParameters.value)._hex), // value of ether to send
+            value: (web3Utils.hexToNumber(BigNumber.from(route.methodParameters.value)._hex)).toString(), // value of ether to send
             from,
             gas: web3Utils.hexToNumber(route.estimatedGasUsed._hex),
-            gasPrice: web3Utils.hexToNumber(route.gasPriceWei._hex)
+            gasPrice: (web3Utils.hexToNumber(route.gasPriceWei._hex)).toString()
         };
 
         return { response };
@@ -129,8 +129,8 @@ const getExchangeRate = async ({
             slippageTolerance
         })
         const response = {
-            toTokenAmount: Number(route.quote.toExact()) * (10 ** toContractDecimal),
-            fromTokenAmount: fromQuantity,
+            toTokenAmount: (Number(route.quote.toExact()) * (10 ** toContractDecimal)).toString(),
+            fromTokenAmount: fromQuantity.toString(),
             estimatedGas: web3Utils.hexToNumber(route.estimatedGasUsed._hex)
         };
 
