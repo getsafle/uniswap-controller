@@ -1,5 +1,5 @@
 {
-  "name": "uniswap-controller",
+  "name": "@getsafle/uniswap-controller",
   "version": "1.0.0",
   "description": "Uniswap controller for safle token swaps",
   "main": "src/index.js",
