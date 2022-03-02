@@ -1,8 +1,8 @@
 const axios = require('axios');
 const { AlphaRouter } = require("@uniswap/smart-order-router");
-const { Token, CurrencyAmount, TradeType, Percent } = require('@uniswap/sdk-core')
+const { Token, CurrencyAmount, TradeType, Percent, Ether } = require('@uniswap/sdk-core')
 const { ethers, BigNumber } = require('ethers')
-const { MAINNET_CHAIN_ID, V3_SWAP_ROUTER_ADDRESS } = require('./const')
+const { MAINNET_CHAIN_ID, V3_SWAP_ROUTER_ADDRESS, ETHEREUM_ADDRESS } = require('./const')
 const web3Utils = require('web3-utils')
 
 const getRequest = async ({ url }) => {
@@ -32,17 +32,29 @@ const transactionBuilder = async ({
 
         const router = new AlphaRouter({ chainId: MAINNET_CHAIN_ID, provider: web3Provider });
 
-        const fromToken = new Token(
-            MAINNET_CHAIN_ID,
-            fromContractAddress,
-            fromContractDecimal
-        );
+        let fromToken;
+        if (fromContractAddress.toLowerCase() === ETHEREUM_ADDRESS.toLowerCase() || fromContractAddress.toLowerCase() === 'eth'.toLowerCase()) {
+            fromToken = new Ether(MAINNET_CHAIN_ID)
+        }
+        else {
+            fromToken = new Token(
+                MAINNET_CHAIN_ID,
+                fromContractAddress,
+                fromContractDecimal
+            );
+        }
 
-        const toToken = new Token(
-            MAINNET_CHAIN_ID,
-            toContractAddress,
-            toContractDecimal
-        );
+        let toToken;
+        if (toContractAddress.toLowerCase() === ETHEREUM_ADDRESS.toLowerCase() || toContractAddress.toLowerCase() === 'eth'.toLowerCase()) {
+            toToken = new Ether(MAINNET_CHAIN_ID)
+        }
+        else {
+            toToken = new Token(
+                MAINNET_CHAIN_ID,
+                toContractAddress,
+                toContractDecimal
+            );
+        }
 
         const typedValueParsed = fromQuantity.toString()
         const fromAmount = CurrencyAmount.fromRawAmount(fromToken, typedValueParsed);
@@ -59,7 +71,7 @@ const transactionBuilder = async ({
         const route = await router.route(
             fromAmount,
             toToken,
-            TradeType.EXACT_IN,
+            TradeType.EXACT_INPUT,
             {
                 ...routeOptions
             }
