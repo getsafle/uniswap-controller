@@ -61,11 +61,11 @@ const transactionBuilder = async ({
 
         const routeOptions = !walletAddress || walletAddress === "" ? {
             slippageTolerance: new Percent(slippageTolerance, 100),
-            deadline: 100
+            deadline: Date.now() + 3600000
         } : {
             recipient: walletAddress,
             slippageTolerance: new Percent(slippageTolerance, 100),
-            deadline: 100
+            deadline: Date.now() + 3600000
         }
 
         const route = await router.route(
@@ -111,7 +111,7 @@ const rawTransaction = async ({
             to,
             value: (web3Utils.hexToNumber(BigNumber.from(route.methodParameters.value)._hex)).toString(), // value of ether to send
             from,
-            gas: web3Utils.hexToNumber(route.estimatedGasUsed._hex),
+            gas: web3Utils.hexToNumber((route.estimatedGasUsed.mul(10))._hex),
             gasPrice: (web3Utils.hexToNumber(route.gasPriceWei._hex)).toString()
         };
 
