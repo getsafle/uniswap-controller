@@ -2,7 +2,7 @@ const axios = require('axios');
 const { AlphaRouter } = require("@uniswap/smart-order-router");
 const { Token, CurrencyAmount, TradeType, Percent, Ether } = require('@uniswap/sdk-core')
 const { ethers, BigNumber } = require('ethers')
-const { MAINNET_CHAIN_ID, V3_SWAP_ROUTER_ADDRESS, ETHEREUM_ADDRESS } = require('./const')
+const { MAINNET_CHAIN_ID, V3_SWAP_ROUTER_ADDRESS, ETHEREUM_ADDRESS, INFURA_RPC } = require('./const')
 const web3Utils = require('web3-utils')
 
 const getRequest = async ({ url }) => {
@@ -28,7 +28,7 @@ const transactionBuilder = async ({
     slippageTolerance = 1
 }) => {
     try {
-        const web3Provider = new ethers.providers.JsonRpcProvider("https://mainnet.infura.io/v3/5583a1ce54604375b02d6246936d9d53");
+        const web3Provider = new ethers.providers.JsonRpcProvider(INFURA_RPC);
 
         const router = new AlphaRouter({ chainId: MAINNET_CHAIN_ID, provider: web3Provider });
 
