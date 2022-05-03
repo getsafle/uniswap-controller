@@ -13,16 +13,16 @@ This will give us the list of all tokens supported in uniswap.
 ### Get Exchange Rate
 
 ```
-await getExchangeRate(_toToken, _fromToken, quantity)
+await getExchangeRate({ toContractAddress, toContractDecimal, fromContractAddress, fromContractDecimal, fromQuantity, slippageTolerance })
 ```
 
 This will give us the exchange rate of 2 tokens.<br/>
-Amount of `_fromToken` the user will receive for `quantity` of `_toToken`.
+Amount of `toContractAddress` the user will receive for `quantity` of `fromContractAddress`.
 
 ### Get Estimated gas
 
 ```
-await getEstimatedGas(_toToken, _fromToken, quantity)
+await getEstimatedGas({ toContractAddress, toContractDecimal, fromContractAddress, fromContractDecimal, fromQuantity, slippageTolerance })
 ```
 
 This will give us the estimated amount of gas in BigNumber for the swap.
@@ -30,7 +30,7 @@ This will give us the estimated amount of gas in BigNumber for the swap.
 ### Get Raw Transaction
 
 ```
-await getRawTransaction(_walletAddress, _toContractAddress, _fromContractAddress, toQuantity, fromQuantity, slippageTolerance = 1)
+await getRawTransaction({ walletAddress, toContractAddress, toContractDecimal, fromContractAddress, fromContractDecimal, toQuantity, fromQuantity, slippageTolerance })
 ```
 
 This will give us the raw transaction to swap the tokens on uniswap.

@@ -25,7 +25,7 @@ const transactionBuilder = async ({
     fromContractDecimal,
     toQuantity,
     fromQuantity,
-    slippageTolerance = 1
+    slippageTolerance
 }) => {
     try {
         const web3Provider = new ethers.providers.JsonRpcProvider(INFURA_RPC);
@@ -127,7 +127,7 @@ const getExchangeRate = async ({
     fromContractAddress,
     fromContractDecimal,
     fromQuantity,
-    slippageTolerance = 1
+    slippageTolerance
 }) => {
     try {
         const { route } = await transactionBuilder({
@@ -158,7 +158,7 @@ const getEstimatedGas = async ({
     fromContractAddress,
     fromContractDecimal,
     fromQuantity,
-    slippageTolerance = 1
+    slippageTolerance
 }) => {
     try {
         const { route } = await transactionBuilder({

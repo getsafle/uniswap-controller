@@ -8,3 +8,9 @@
 * Added method to get exhange rate
 * Added method to get estimated gas
 * Added method to get raw transaction
+
+
+### 1.0.1 (2022-05-03)
+
+* Updated methods to accept custom slippage
+
