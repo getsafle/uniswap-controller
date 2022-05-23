@@ -2,7 +2,7 @@ const axios = require('axios');
 const { AlphaRouter } = require("@uniswap/smart-order-router");
 const { Token, CurrencyAmount, TradeType, Percent, Ether } = require('@uniswap/sdk-core')
 const { ethers, BigNumber } = require('ethers')
-const { MAINNET_CHAIN_ID, V3_SWAP_ROUTER_ADDRESS, ETHEREUM_ADDRESS, INFURA_RPC } = require('./const')
+const { MAINNET_CHAIN_ID, V3_SWAP_ROUTER_ADDRESS, ETHEREUM_ADDRESS, INFURA_RPC, ERROR_MESSAGES: { NULL_ROUTE, INVARIANT_ADDRESS, QUOTE_OF_NULL, TOKEN_PAIR_DOESNOT_EXIST } } = require('./const')
 const web3Utils = require('web3-utils')
 
 const getRequest = async ({ url }) => {
@@ -106,6 +106,8 @@ const rawTransaction = async ({
             fromQuantity,
             slippageTolerance
         })
+        if (!route)
+            throw new Error(NULL_ROUTE)
         const response = {
             data: route.methodParameters.calldata,
             to,
@@ -140,6 +142,8 @@ const getExchangeRate = async ({
             fromQuantity,
             slippageTolerance
         })
+        if (!route)
+            throw new Error(NULL_ROUTE)
         const response = {
             toTokenAmount: (Number(route.quote.toExact()) * (10 ** toContractDecimal)).toString(),
             fromTokenAmount: fromQuantity.toString(),
@@ -171,6 +175,8 @@ const getEstimatedGas = async ({
             fromQuantity,
             slippageTolerance
         })
+        if (!route)
+            throw new Error(NULL_ROUTE)
         const response = {
             estimatedGas: web3Utils.hexToNumber(route.estimatedGasUsed._hex)
         };
@@ -181,5 +187,16 @@ const getEstimatedGas = async ({
     }
 }
 
-module.exports = { getRequest, rawTransaction, getExchangeRate, getEstimatedGas };
+const setErrorResponse = (err) => {
+    switch (err.message) {
+        case INVARIANT_ADDRESS:
+        case QUOTE_OF_NULL:
+        case NULL_ROUTE:
+            return { err, message: TOKEN_PAIR_DOESNOT_EXIST }
+        default:
+            return { err, message: err.message }
+    }
+}
+
+module.exports = { getRequest, rawTransaction, getExchangeRate, getEstimatedGas, setErrorResponse };
 

@@ -11,7 +11,7 @@ class Uniswap {
             const { response } = await helper.getRequest({ url: config.SUPPORTED_TOKENS_URL });
             return response;
         } catch (error) {
-            throw { error, message: error.message }
+            throw helper.setErrorResponse(error)
         }
     }
 
@@ -31,7 +31,7 @@ class Uniswap {
             );
             return response;
         } catch (error) {
-            throw { error, message: error.message }
+            throw helper.setErrorResponse(error)
         }
     }
 
@@ -49,7 +49,7 @@ class Uniswap {
             });
             return { estimatedGas: response.estimatedGas };
         } catch (error) {
-            throw { error, message: error.message }
+            throw helper.setErrorResponse(error)
         }
 
     }
@@ -72,7 +72,7 @@ class Uniswap {
                 });
             return response;
         } catch (error) {
-            throw { error, message: error.message }
+            throw helper.setErrorResponse(error)
         }
     }
 }
