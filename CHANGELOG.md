@@ -14,3 +14,8 @@
 
 * Updated methods to accept custom slippage
 
+
+### 1.0.2 (2022-05-23)
+
+* Updated ETH support
+* Updated error messages

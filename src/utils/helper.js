@@ -2,7 +2,7 @@ const axios = require('axios');
 const { AlphaRouter } = require("@uniswap/smart-order-router");
 const { Token, CurrencyAmount, TradeType, Percent, Ether } = require('@uniswap/sdk-core')
 const { ethers, BigNumber } = require('ethers')
-const { MAINNET_CHAIN_ID, V3_SWAP_ROUTER_ADDRESS, ETHEREUM_ADDRESS, INFURA_RPC } = require('./const')
+const { MAINNET_CHAIN_ID, V3_SWAP_ROUTER_ADDRESS, ETHEREUM_ADDRESS, INFURA_RPC, ERROR_MESSAGES: { NULL_ROUTE, INVARIANT_ADDRESS, QUOTE_OF_NULL, TOKEN_PAIR_DOESNOT_EXIST } } = require('./const')
 const web3Utils = require('web3-utils')
 
 const getRequest = async ({ url }) => {
@@ -34,7 +34,7 @@ const transactionBuilder = async ({
 
         let fromToken;
         if (fromContractAddress.toLowerCase() === ETHEREUM_ADDRESS.toLowerCase() || fromContractAddress.toLowerCase() === 'eth'.toLowerCase()) {
-            fromToken = new Ether(MAINNET_CHAIN_ID)
+            fromToken = new Ether(MAINNET_CHAIN_ID).wrapped
         }
         else {
             fromToken = new Token(
@@ -46,7 +46,7 @@ const transactionBuilder = async ({
 
         let toToken;
         if (toContractAddress.toLowerCase() === ETHEREUM_ADDRESS.toLowerCase() || toContractAddress.toLowerCase() === 'eth'.toLowerCase()) {
-            toToken = new Ether(MAINNET_CHAIN_ID)
+            toToken = new Ether(MAINNET_CHAIN_ID).wrapped
         }
         else {
             toToken = new Token(
@@ -80,7 +80,7 @@ const transactionBuilder = async ({
         return { route, to: V3_SWAP_ROUTER_ADDRESS, from: walletAddress };
 
     } catch (error) {
-        throw { error }
+        throw error
     }
 
 }
@@ -106,6 +106,8 @@ const rawTransaction = async ({
             fromQuantity,
             slippageTolerance
         })
+        if (!route)
+            throw new Error(NULL_ROUTE)
         const response = {
             data: route.methodParameters.calldata,
             to,
@@ -117,7 +119,7 @@ const rawTransaction = async ({
 
         return { response };
     } catch (error) {
-        return { error }
+        throw error
     }
 }
 
@@ -140,6 +142,8 @@ const getExchangeRate = async ({
             fromQuantity,
             slippageTolerance
         })
+        if (!route)
+            throw new Error(NULL_ROUTE)
         const response = {
             toTokenAmount: (Number(route.quote.toExact()) * (10 ** toContractDecimal)).toString(),
             fromTokenAmount: fromQuantity.toString(),
@@ -148,7 +152,7 @@ const getExchangeRate = async ({
 
         return { response };
     } catch (error) {
-        return { error }
+        throw error
     }
 }
 
@@ -171,15 +175,28 @@ const getEstimatedGas = async ({
             fromQuantity,
             slippageTolerance
         })
+        if (!route)
+            throw new Error(NULL_ROUTE)
         const response = {
             estimatedGas: web3Utils.hexToNumber(route.estimatedGasUsed._hex)
         };
 
         return { response };
     } catch (error) {
-        return { error }
+        throw error
     }
 }
 
-module.exports = { getRequest, rawTransaction, getExchangeRate, getEstimatedGas };
+const setErrorResponse = (err) => {
+    switch (err.message) {
+        case INVARIANT_ADDRESS:
+        case QUOTE_OF_NULL:
+        case NULL_ROUTE:
+            return { err, message: TOKEN_PAIR_DOESNOT_EXIST }
+        default:
+            return { err, message: err.message }
+    }
+}
+
+module.exports = { getRequest, rawTransaction, getExchangeRate, getEstimatedGas, setErrorResponse };
 

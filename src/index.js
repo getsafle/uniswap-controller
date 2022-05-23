@@ -7,64 +7,73 @@ class Uniswap {
     constructor() { }
 
     async getSupportedTokens() {
-        const { response, error } = await helper.getRequest({ url: config.SUPPORTED_TOKENS_URL });
-        if (error)
-            throw error
-        return response;
+        try {
+            const { response } = await helper.getRequest({ url: config.SUPPORTED_TOKENS_URL });
+            return response;
+        } catch (error) {
+            throw helper.setErrorResponse(error)
+        }
     }
 
     async getExchangeRate({ toContractAddress, toContractDecimal, fromContractAddress, fromContractDecimal, fromQuantity, slippageTolerance }) {
-        const _toContractAddress = web3Utils.toChecksumAddress(toContractAddress)
-        const _fromContractAddress = web3Utils.toChecksumAddress(fromContractAddress)
-        const { response, error } = await helper.getExchangeRate(
-            {
-                toContractAddress: _toContractAddress,
-                toContractDecimal,
-                fromContractAddress: _fromContractAddress,
-                fromContractDecimal,
-                fromQuantity,
-                slippageTolerance
-            }
-        );
-        if (error)
-            throw error
-        return response;
+        try {
+            const _toContractAddress = web3Utils.toChecksumAddress(toContractAddress)
+            const _fromContractAddress = web3Utils.toChecksumAddress(fromContractAddress)
+            const { response } = await helper.getExchangeRate(
+                {
+                    toContractAddress: _toContractAddress,
+                    toContractDecimal,
+                    fromContractAddress: _fromContractAddress,
+                    fromContractDecimal,
+                    fromQuantity,
+                    slippageTolerance
+                }
+            );
+            return response;
+        } catch (error) {
+            throw helper.setErrorResponse(error)
+        }
     }
 
     async getEstimatedGas({ toContractAddress, toContractDecimal, fromContractAddress, fromContractDecimal, fromQuantity, slippageTolerance }) {
-        const _toContractAddress = web3Utils.toChecksumAddress(toContractAddress)
-        const _fromContractAddress = web3Utils.toChecksumAddress(fromContractAddress)
-        const { response, error } = await helper.getEstimatedGas({
-            toContractAddress: _toContractAddress,
-            toContractDecimal,
-            fromContractAddress: _fromContractAddress,
-            fromContractDecimal,
-            fromQuantity,
-            slippageTolerance
-        });
-        if (error)
-            throw error
-        return { estimatedGas: response.estimatedGas };
-    }
-
-    async getRawTransaction({ walletAddress, toContractAddress, toContractDecimal, fromContractAddress, fromContractDecimal, toQuantity, fromQuantity, slippageTolerance }) {
-        const _toContractAddress = web3Utils.toChecksumAddress(toContractAddress)
-        const _fromContractAddress = web3Utils.toChecksumAddress(fromContractAddress)
-        const _walletAddress = web3Utils.toChecksumAddress(walletAddress)
-        const { response, error } = await helper.rawTransaction(
-            {
-                walletAddress: _walletAddress,
+        try {
+            const _toContractAddress = web3Utils.toChecksumAddress(toContractAddress)
+            const _fromContractAddress = web3Utils.toChecksumAddress(fromContractAddress)
+            const { response } = await helper.getEstimatedGas({
                 toContractAddress: _toContractAddress,
                 toContractDecimal,
                 fromContractAddress: _fromContractAddress,
                 fromContractDecimal,
-                toQuantity,
                 fromQuantity,
                 slippageTolerance
             });
-        if (error)
-            throw error
-        return response;
+            return { estimatedGas: response.estimatedGas };
+        } catch (error) {
+            throw helper.setErrorResponse(error)
+        }
+
+    }
+
+    async getRawTransaction({ walletAddress, toContractAddress, toContractDecimal, fromContractAddress, fromContractDecimal, toQuantity, fromQuantity, slippageTolerance }) {
+        try {
+            const _toContractAddress = web3Utils.toChecksumAddress(toContractAddress)
+            const _fromContractAddress = web3Utils.toChecksumAddress(fromContractAddress)
+            const _walletAddress = web3Utils.toChecksumAddress(walletAddress)
+            const { response } = await helper.rawTransaction(
+                {
+                    walletAddress: _walletAddress,
+                    toContractAddress: _toContractAddress,
+                    toContractDecimal,
+                    fromContractAddress: _fromContractAddress,
+                    fromContractDecimal,
+                    toQuantity,
+                    fromQuantity,
+                    slippageTolerance
+                });
+            return response;
+        } catch (error) {
+            throw helper.setErrorResponse(error)
+        }
     }
 }
 
