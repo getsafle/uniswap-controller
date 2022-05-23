@@ -34,7 +34,7 @@ const transactionBuilder = async ({
 
         let fromToken;
         if (fromContractAddress.toLowerCase() === ETHEREUM_ADDRESS.toLowerCase() || fromContractAddress.toLowerCase() === 'eth'.toLowerCase()) {
-            fromToken = new Ether(MAINNET_CHAIN_ID)
+            fromToken = new Ether(MAINNET_CHAIN_ID).wrapped
         }
         else {
             fromToken = new Token(
@@ -46,7 +46,7 @@ const transactionBuilder = async ({
 
         let toToken;
         if (toContractAddress.toLowerCase() === ETHEREUM_ADDRESS.toLowerCase() || toContractAddress.toLowerCase() === 'eth'.toLowerCase()) {
-            toToken = new Ether(MAINNET_CHAIN_ID)
+            toToken = new Ether(MAINNET_CHAIN_ID).wrapped
         }
         else {
             toToken = new Token(
@@ -80,7 +80,7 @@ const transactionBuilder = async ({
         return { route, to: V3_SWAP_ROUTER_ADDRESS, from: walletAddress };
 
     } catch (error) {
-        throw { error }
+        throw error
     }
 
 }
@@ -117,7 +117,7 @@ const rawTransaction = async ({
 
         return { response };
     } catch (error) {
-        return { error }
+        throw error
     }
 }
 
@@ -148,7 +148,7 @@ const getExchangeRate = async ({
 
         return { response };
     } catch (error) {
-        return { error }
+        throw error
     }
 }
 
@@ -177,7 +177,7 @@ const getEstimatedGas = async ({
 
         return { response };
     } catch (error) {
-        return { error }
+        throw error
     }
 }
 
