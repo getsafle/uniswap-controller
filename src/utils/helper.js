@@ -2,7 +2,7 @@ const axios = require('axios');
 const { AlphaRouter } = require("@uniswap/smart-order-router");
 const { Token, CurrencyAmount, TradeType, Percent, Ether } = require('@uniswap/sdk-core')
 const { ethers, BigNumber } = require('ethers')
-const { MAINNET_CHAIN_ID, V3_SWAP_ROUTER_ADDRESS, ETHEREUM_ADDRESS, INFURA_RPC, ERROR_MESSAGES: { NULL_ROUTE, INVARIANT_ADDRESS, QUOTE_OF_NULL, TOKEN_PAIR_DOESNOT_EXIST } } = require('./const')
+const { NETWORK, V3_SWAP_ROUTER_ADDRESS, ETHEREUM_ADDRESS, ERROR_MESSAGES: { NULL_ROUTE, INVARIANT_ADDRESS, QUOTE_OF_NULL, TOKEN_PAIR_DOESNOT_EXIST, INVALID_CHAIN_ERORR } } = require('./const')
 const web3Utils = require('web3-utils')
 
 const getRequest = async ({ url }) => {
@@ -26,19 +26,19 @@ const transactionBuilder = async ({
     toQuantity,
     fromQuantity,
     slippageTolerance
-}) => {
+}, network) => {
     try {
-        const web3Provider = new ethers.providers.JsonRpcProvider(INFURA_RPC);
+        const web3Provider = new ethers.providers.JsonRpcProvider(network.RPC);
 
-        const router = new AlphaRouter({ chainId: MAINNET_CHAIN_ID, provider: web3Provider });
+        const router = new AlphaRouter({ chainId: network.CHAIN_ID, provider: web3Provider });
 
         let fromToken;
         if (fromContractAddress.toLowerCase() === ETHEREUM_ADDRESS.toLowerCase() || fromContractAddress.toLowerCase() === 'eth'.toLowerCase()) {
-            fromToken = new Ether(MAINNET_CHAIN_ID).wrapped
+            fromToken = new Ether(network.CHAIN_ID).wrapped
         }
         else {
             fromToken = new Token(
-                MAINNET_CHAIN_ID,
+                network.CHAIN_ID,
                 fromContractAddress,
                 fromContractDecimal
             );
@@ -46,11 +46,12 @@ const transactionBuilder = async ({
 
         let toToken;
         if (toContractAddress.toLowerCase() === ETHEREUM_ADDRESS.toLowerCase() || toContractAddress.toLowerCase() === 'eth'.toLowerCase()) {
-            toToken = new Ether(MAINNET_CHAIN_ID).wrapped
+            toToken = new Ether(network.CHAIN_ID).wrapped
+
         }
         else {
             toToken = new Token(
-                MAINNET_CHAIN_ID,
+                network.CHAIN_ID,
                 toContractAddress,
                 toContractDecimal
             );
@@ -94,7 +95,7 @@ const rawTransaction = async ({
     toQuantity,
     fromQuantity,
     slippageTolerance
-}) => {
+}, network) => {
     try {
         const { route, to, from } = await transactionBuilder({
             walletAddress,
@@ -105,7 +106,7 @@ const rawTransaction = async ({
             toQuantity,
             fromQuantity,
             slippageTolerance
-        })
+        }, network)
         if (!route)
             throw new Error(NULL_ROUTE)
         const response = {
@@ -130,7 +131,7 @@ const getExchangeRate = async ({
     fromContractDecimal,
     fromQuantity,
     slippageTolerance
-}) => {
+}, network) => {
     try {
         const { route } = await transactionBuilder({
             walletAddress: null,
@@ -141,7 +142,7 @@ const getExchangeRate = async ({
             toQuantity: 0,
             fromQuantity,
             slippageTolerance
-        })
+        }, network)
         if (!route)
             throw new Error(NULL_ROUTE)
         const response = {
@@ -163,7 +164,7 @@ const getEstimatedGas = async ({
     fromContractDecimal,
     fromQuantity,
     slippageTolerance
-}) => {
+}, network) => {
     try {
         const { route } = await transactionBuilder({
             walletAddress: null,
@@ -174,7 +175,7 @@ const getEstimatedGas = async ({
             toQuantity: 0,
             fromQuantity,
             slippageTolerance
-        })
+        }, network)
         if (!route)
             throw new Error(NULL_ROUTE)
         const response = {
@@ -198,5 +199,23 @@ const setErrorResponse = (err) => {
     }
 }
 
-module.exports = { getRequest, rawTransaction, getExchangeRate, getEstimatedGas, setErrorResponse };
+const getBaseURL = async (chain) => {
+    switch (chain) {
+        case NETWORK.POLYGON_MAINNET.NAME:
+            return {
+                RPC: NETWORK.POLYGON_MAINNET.RPC,
+                CHAIN_ID: NETWORK.POLYGON_MAINNET.CHAIN_ID
+            }
+        case NETWORK.ETHEREUM_MAINNET.NAME:
+            return {
+                RPC: NETWORK.ETHEREUM_MAINNET.RPC,
+                CHAIN_ID: NETWORK.ETHEREUM_MAINNET.CHAIN_ID
+            }
+        default:
+            return { error: { message: INVALID_CHAIN_ERORR } }
+    }
+
+}
+
+module.exports = { getRequest, rawTransaction, getExchangeRate, getEstimatedGas, setErrorResponse, getBaseURL };
 

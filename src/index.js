@@ -4,11 +4,21 @@ const web3Utils = require('web3-utils')
 
 class Uniswap {
 
-    constructor() { }
+    constructor(chain) {
+        this.chain = chain;
+    }
+
+    async getSupportedChains() {
+        return { chains: config.SUPPORTED_CHAINS };
+    }
 
     async getSupportedTokens() {
         try {
-            const { response } = await helper.getRequest({ url: config.SUPPORTED_TOKENS_URL });
+            const url = await helper.getBaseURL(this.chain);
+            if (url.error) {
+                throw helper.setErrorResponse(url.error)
+            }
+            const { response } = await helper.getRequest({ url: config.SUPPORTED_TOKENS_URL }, url);
             return response;
         } catch (error) {
             throw helper.setErrorResponse(error)
@@ -17,6 +27,10 @@ class Uniswap {
 
     async getExchangeRate({ toContractAddress, toContractDecimal, fromContractAddress, fromContractDecimal, fromQuantity, slippageTolerance }) {
         try {
+            const url = await helper.getBaseURL(this.chain);
+            if (url.error) {
+                throw helper.setErrorResponse(url.error)
+            }
             const _toContractAddress = web3Utils.toChecksumAddress(toContractAddress)
             const _fromContractAddress = web3Utils.toChecksumAddress(fromContractAddress)
             const { response } = await helper.getExchangeRate(
@@ -27,8 +41,7 @@ class Uniswap {
                     fromContractDecimal,
                     fromQuantity,
                     slippageTolerance
-                }
-            );
+                }, url);
             return response;
         } catch (error) {
             throw helper.setErrorResponse(error)
@@ -37,6 +50,10 @@ class Uniswap {
 
     async getEstimatedGas({ toContractAddress, toContractDecimal, fromContractAddress, fromContractDecimal, fromQuantity, slippageTolerance }) {
         try {
+            const url = await helper.getBaseURL(this.chain);
+            if (url.error) {
+                throw helper.setErrorResponse(url.error)
+            }
             const _toContractAddress = web3Utils.toChecksumAddress(toContractAddress)
             const _fromContractAddress = web3Utils.toChecksumAddress(fromContractAddress)
             const { response } = await helper.getEstimatedGas({
@@ -46,7 +63,7 @@ class Uniswap {
                 fromContractDecimal,
                 fromQuantity,
                 slippageTolerance
-            });
+            }, url);
             return { estimatedGas: response.estimatedGas };
         } catch (error) {
             throw helper.setErrorResponse(error)
@@ -56,6 +73,10 @@ class Uniswap {
 
     async getRawTransaction({ walletAddress, toContractAddress, toContractDecimal, fromContractAddress, fromContractDecimal, toQuantity, fromQuantity, slippageTolerance }) {
         try {
+            const url = await helper.getBaseURL(this.chain);
+            if (url.error) {
+                throw helper.setErrorResponse(url.error)
+            }
             const _toContractAddress = web3Utils.toChecksumAddress(toContractAddress)
             const _fromContractAddress = web3Utils.toChecksumAddress(fromContractAddress)
             const _walletAddress = web3Utils.toChecksumAddress(walletAddress)
@@ -69,7 +90,7 @@ class Uniswap {
                     toQuantity,
                     fromQuantity,
                     slippageTolerance
-                });
+                }, url);
             return response;
         } catch (error) {
             throw helper.setErrorResponse(error)
