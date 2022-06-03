@@ -34,7 +34,7 @@ const transactionBuilder = async ({
 
         let fromToken;
         if (fromContractAddress.toLowerCase() === ETHEREUM_ADDRESS.toLowerCase() || fromContractAddress.toLowerCase() === 'eth'.toLowerCase()) {
-            fromToken = new Ether(MAINNET_CHAIN_ID).wrapped
+            fromToken = new Ether(MAINNET_CHAIN_ID)
         }
         else {
             fromToken = new Token(
@@ -46,7 +46,7 @@ const transactionBuilder = async ({
 
         let toToken;
         if (toContractAddress.toLowerCase() === ETHEREUM_ADDRESS.toLowerCase() || toContractAddress.toLowerCase() === 'eth'.toLowerCase()) {
-            toToken = new Ether(MAINNET_CHAIN_ID).wrapped
+            toToken = new Ether(MAINNET_CHAIN_ID)
         }
         else {
             toToken = new Token(
