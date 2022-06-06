@@ -75,6 +75,22 @@ class Uniswap {
             throw helper.setErrorResponse(error)
         }
     }
+
+    async approvalRawTransaction({ fromContractAddress, walletAddress, fromQuantity }) {
+        try {
+            const _fromContractAddress = web3Utils.toChecksumAddress(fromContractAddress)
+            const _walletAddress = web3Utils.toChecksumAddress(walletAddress)
+            const { response } = await helper.approvalRawTransaction(
+                {
+                    walletAddress: _walletAddress,
+                    fromContractAddress: _fromContractAddress,
+                    fromQuantity,
+                });
+            return response;
+        } catch (error) {
+            throw helper.setErrorResponse(error)
+        }
+    }
 }
 
 module.exports = Uniswap;

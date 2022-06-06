@@ -1,9 +1,10 @@
 const axios = require('axios');
 const { AlphaRouter } = require("@uniswap/smart-order-router");
 const { Token, CurrencyAmount, TradeType, Percent, Ether } = require('@uniswap/sdk-core')
-const { ethers, BigNumber } = require('ethers')
-const { MAINNET_CHAIN_ID, V3_SWAP_ROUTER_ADDRESS, ETHEREUM_ADDRESS, INFURA_RPC, ERROR_MESSAGES: { NULL_ROUTE, INVARIANT_ADDRESS, QUOTE_OF_NULL, TOKEN_PAIR_DOESNOT_EXIST } } = require('./const')
+const { ethers, BigNumber, Contract } = require('ethers')
+const { MAINNET_CHAIN_ID, V3_SWAP_ROUTER_ADDRESS, ETHEREUM_ADDRESS, INFURA_RPC, ERROR_MESSAGES: { NULL_ROUTE, INVARIANT_ADDRESS, QUOTE_OF_NULL, TOKEN_PAIR_DOESNOT_EXIST, INSUFFICIENT_BALANCE } } = require('./const')
 const web3Utils = require('web3-utils')
+const { TOKEN_CONTRACT_ABI } = require('./tokenABI')
 
 const getRequest = async ({ url }) => {
     try {
@@ -96,6 +97,7 @@ const rawTransaction = async ({
     slippageTolerance
 }) => {
     try {
+        await checkBalance(fromContractAddress, walletAddress, fromQuantity)
         const { route, to, from } = await transactionBuilder({
             walletAddress,
             toContractAddress,
@@ -193,10 +195,66 @@ const setErrorResponse = (err) => {
         case QUOTE_OF_NULL:
         case NULL_ROUTE:
             return { err, message: TOKEN_PAIR_DOESNOT_EXIST }
+        case INSUFFICIENT_BALANCE:
+            return { err, message: INSUFFICIENT_BALANCE }
         default:
             return { err, message: err.message }
     }
 }
 
-module.exports = { getRequest, rawTransaction, getExchangeRate, getEstimatedGas, setErrorResponse };
+const checkBalance = async (fromContractAddress, walletAddress, fromQuantity) => {
+    try {
+        let tokenBalance;
+        const web3Provider = new ethers.providers.JsonRpcProvider(INFURA_RPC);
+        if (fromContractAddress.toLowerCase() === ETHEREUM_ADDRESS.toLowerCase() || fromContractAddress.toLowerCase() === 'eth'.toLowerCase()) {
+            tokenBalance = await web3Provider.getBalance(walletAddress)
+        } else {
+            const contract = new Contract(fromContractAddress, TOKEN_CONTRACT_ABI, web3Provider);
+            tokenBalance = await contract.balanceOf(walletAddress);
+        }
+
+        if (Number(tokenBalance) < fromQuantity)
+            throw new Error(INSUFFICIENT_BALANCE)
+        else
+            return true
+    } catch (err) {
+        throw err
+    }
+}
+
+const approvalRawTransaction = async ({
+    fromContractAddress, walletAddress, fromQuantity
+}) => {
+    try {
+        await checkBalance(fromContractAddress, walletAddress, fromQuantity)
+        if (fromContractAddress.toLowerCase() === ETHEREUM_ADDRESS.toLowerCase() || fromContractAddress.toLowerCase() === 'eth'.toLowerCase())
+            return { response: true }
+        else {
+
+            const web3Provider = new ethers.providers.JsonRpcProvider(INFURA_RPC);
+            const contract = new Contract(fromContractAddress, TOKEN_CONTRACT_ABI, web3Provider);
+            const checkAllowance = await contract.allowance(walletAddress, V3_SWAP_ROUTER_ADDRESS);
+
+            if (Number(checkAllowance) < fromQuantity) {
+                const txCount = await web3Provider.getTransactionCount(walletAddress);
+                // build the transaction
+                const tx = {
+                    from: walletAddress,
+                    nonce: ethers.utils.hexlify(txCount),
+                    to: fromContractAddress,
+                    data: contract.interface.encodeFunctionData('approve', [V3_SWAP_ROUTER_ADDRESS, fromQuantity]),
+                    gas: await contract.estimateGas.approve(V3_SWAP_ROUTER_ADDRESS, fromQuantity),
+                    gasPrice: await web3Provider.getGasPrice(),
+                };
+                return { response: tx }
+            }
+            else
+                return { response: true }
+        }
+    } catch (err) {
+        throw err
+    }
+}
+
+module.exports = { getRequest, rawTransaction, getExchangeRate, getEstimatedGas, setErrorResponse, approvalRawTransaction };
 
