@@ -30,7 +30,6 @@ const transactionBuilder = async ({
 }) => {
     try {
         const web3Provider = new ethers.providers.JsonRpcProvider(INFURA_RPC);
-
         const router = new AlphaRouter({ chainId: MAINNET_CHAIN_ID, provider: web3Provider });
 
         let fromToken;
@@ -77,13 +76,10 @@ const transactionBuilder = async ({
                 ...routeOptions
             }
         );
-
         return { route, to: V3_SWAP_ROUTER_ADDRESS, from: walletAddress };
-
     } catch (error) {
         throw error
     }
-
 }
 
 const rawTransaction = async ({
@@ -118,7 +114,6 @@ const rawTransaction = async ({
             gas: web3Utils.hexToNumber((route.estimatedGasUsed.mul(10))._hex),
             gasPrice: (web3Utils.hexToNumber(route.gasPriceWei._hex)).toString()
         };
-
         return { response };
     } catch (error) {
         throw error
@@ -151,7 +146,6 @@ const getExchangeRate = async ({
             fromTokenAmount: fromQuantity.toString(),
             estimatedGas: web3Utils.hexToNumber(route.estimatedGasUsed._hex)
         };
-
         return { response };
     } catch (error) {
         throw error
@@ -182,7 +176,6 @@ const getEstimatedGas = async ({
         const response = {
             estimatedGas: web3Utils.hexToNumber(route.estimatedGasUsed._hex)
         };
-
         return { response };
     } catch (error) {
         throw error
@@ -212,7 +205,6 @@ const checkBalance = async (fromContractAddress, walletAddress, fromQuantity) =>
             const contract = new Contract(fromContractAddress, TOKEN_CONTRACT_ABI, web3Provider);
             tokenBalance = await contract.balanceOf(walletAddress);
         }
-
         if (Number(tokenBalance) < fromQuantity)
             throw new Error(INSUFFICIENT_BALANCE)
         else
@@ -230,21 +222,17 @@ const approvalRawTransaction = async ({
         if (fromContractAddress.toLowerCase() === ETHEREUM_ADDRESS.toLowerCase() || fromContractAddress.toLowerCase() === 'eth'.toLowerCase())
             return { response: true }
         else {
-
             const web3Provider = new ethers.providers.JsonRpcProvider(INFURA_RPC);
             const contract = new Contract(fromContractAddress, TOKEN_CONTRACT_ABI, web3Provider);
             const checkAllowance = await contract.allowance(walletAddress, V3_SWAP_ROUTER_ADDRESS);
-
             if (Number(checkAllowance) < fromQuantity) {
-                const txCount = await web3Provider.getTransactionCount(walletAddress);
-                // build the transaction
                 const tx = {
                     from: walletAddress,
-                    nonce: ethers.utils.hexlify(txCount),
                     to: fromContractAddress,
                     data: contract.interface.encodeFunctionData('approve', [V3_SWAP_ROUTER_ADDRESS, fromQuantity]),
-                    gas: await contract.estimateGas.approve(V3_SWAP_ROUTER_ADDRESS, fromQuantity),
-                    gasPrice: await web3Provider.getGasPrice(),
+                    gas: web3Utils.hexToNumber((await contract.estimateGas.approve(V3_SWAP_ROUTER_ADDRESS, fromQuantity))._hex),
+                    gasPrice: web3Utils.hexToNumber((await web3Provider.getGasPrice())._hex),
+                    value: '0'
                 };
                 return { response: tx }
             }
