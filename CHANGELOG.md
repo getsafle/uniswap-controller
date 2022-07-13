@@ -25,3 +25,7 @@
 ### 1.0.4 (2022-06-07)
 
 - Added ETH and WETH swap support using deposit and withdraw
+
+### 1.0.5 (2022-07-13)
+
+- Updated uniswap package versions
