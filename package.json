@@ -35,9 +35,9 @@
   },
   "homepage": "https://github.com/getsafle/uniswap-controller#readme",
   "dependencies": {
-    "@uniswap/sdk-core": "^3.0.1",
-    "@uniswap/smart-order-router": "^2.5.15",
-    "@uniswap/v3-sdk": "^3.8.2",
+    "@uniswap/sdk-core": "3.0.1",
+    "@uniswap/smart-order-router": "2.5.15",
+    "@uniswap/v3-sdk": "3.8.2",
     "axios": "^0.25.0",
     "ethers": "^5.5.4",
     "web3-utils": "^1.7.0"
