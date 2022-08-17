@@ -3,7 +3,7 @@ module.exports = {
     V3_SWAP_ROUTER_ADDRESS: '0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45',
     ETHEREUM_ADDRESS: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
     WRAPPED_ETHEREUM_ADDRESS: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-    INFURA_RPC: 'https://mainnet.infura.io/v3/5583a1ce54604375b02d6246936d9d53',
+    INFURA_RPC: 'https://mainnet.infura.io/v3/2851f8f32e8f4476bb4b9a7b9c6e5292',
     ERROR_MESSAGES: {
         NULL_ROUTE: 'Route cannot be null',
         INVARIANT_ADDRESS: 'Invariant failed: ADDRESSES',

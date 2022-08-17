@@ -29,3 +29,7 @@
 ### 1.0.5 (2022-07-13)
 
 - Updated uniswap package versions
+
+### 1.0.6 (2022-08-17)
+
+- Updated infura URL
