@@ -334,7 +334,7 @@ const approvalRawTransaction = async ({
                     from: walletAddress,
                     to: fromContractAddress,
                     data: contract.interface.encodeFunctionData('approve', [V3_SWAP_ROUTER_ADDRESS, fromQuantity]),
-                    gas: web3Utils.hexToNumber((await contract.estimateGas.approve(V3_SWAP_ROUTER_ADDRESS, fromQuantity))._hex),
+                    gas: web3Utils.hexToNumber((await contract.estimateGas.approve(V3_SWAP_ROUTER_ADDRESS, fromQuantity, { from: walletAddress }))._hex),
                     gasPrice: web3Utils.hexToNumber((await web3Provider.getGasPrice())._hex),
                     value: '0'
                 };

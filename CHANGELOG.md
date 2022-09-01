@@ -33,3 +33,7 @@
 ### 1.0.6 (2022-08-17)
 
 - Updated infura URL
+
+### 1.0.7 (2022-08-17)
+
+- Fixed gas calculations in `approvalRawTransaction`
