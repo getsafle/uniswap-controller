@@ -37,3 +37,7 @@
 ### 1.0.7 (2022-08-17)
 
 - Fixed gas calculations in `approvalRawTransaction`
+
+### 1.0.8 (2022-09-12)
+
+- Updated the README file with the latest functional & non-functional documentation.

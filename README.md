@@ -1,36 +1,80 @@
 # uniswap-dex-controller
 
-This repo contains uniswap dex controller for safle swap.
+This SDK houses the functions to interact with the Uniswap Contracts.
 
-### Get supported tokens
+## Installation
 
-```
-await getSupportedTokens()
-```
+To install this SDK,
 
-This will give us the list of all tokens supported in uniswap.
-
-### Get Exchange Rate
-
-```
-await getExchangeRate({ toContractAddress, toContractDecimal, fromContractAddress, fromContractDecimal, fromQuantity, slippageTolerance })
+```sh
+npm install --save @getsafle/uniswap-controller
 ```
 
-This will give us the exchange rate of 2 tokens.<br/>
-Amount of `toContractAddress` the user will receive for `quantity` of `fromContractAddress`.
+## Initialization
 
-### Get Estimated gas
+Initialize the constructor,
 
-```
-await getEstimatedGas({ toContractAddress, toContractDecimal, fromContractAddress, fromContractDecimal, fromQuantity, slippageTolerance })
-```
+```js
+const UniSwap = require('@getsafle/uniswap-controller');
 
-This will give us the estimated amount of gas in BigNumber for the swap.
-
-### Get Raw Transaction
-
-```
-await getRawTransaction({ walletAddress, toContractAddress, toContractDecimal, fromContractAddress, fromContractDecimal, toQuantity, fromQuantity, slippageTolerance })
+const controller = new UniSwap();
 ```
 
-This will give us the raw transaction to swap the tokens on uniswap.
+<br>
+
+> Get supported tokens
+
+This function will give us the list of all tokens supported by Uniswap.
+
+```js
+await controller.getSupportedTokens()
+```
+
+<br>
+
+> Get Exchange Rate
+
+<br>
+
+This will give us the exchange rate of 2 tokens.
+Amount of `fromContractAddress` the user will receive for `fromQuantity` of `toContractAddress`.
+
+```js
+await controller.getExchangeRate({ toContractAddress, toContractDecimal, fromContractAddress, fromContractDecimal, fromQuantity, slippageTolerance })
+```
+
+<br>
+
+> Get Estimated gas
+
+<br>
+
+This will give us the estimated amount of gas needed to do the swap.
+
+```js
+await controller.getEstimatedGas({ toContractAddress, toContractDecimal, fromContractAddress, fromContractDecimal, fromQuantity, slippageTolerance })
+```
+
+<br>
+
+> Get Raw Transaction
+
+<br>
+
+This will give us the raw transaction to swap the tokens on 1inch.
+
+```js
+await controller.getRawTransaction({ walletAddress, toContractAddress, toContractDecimal, fromContractAddress, fromContractDecimal, toQuantity, fromQuantity, slippageTolerance })
+```
+
+<br>
+
+> Get Approval Transaction
+
+<br>
+
+This function will call the approval smart contract function to approve spending `fromQuantity` for the `fromContractAddress` from the `walletAddress`.
+
+```js
+await controller.approvalRawTransaction({ fromContractAddress, walletAddress, fromQuantity })
+```
