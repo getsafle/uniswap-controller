@@ -16,7 +16,7 @@ module.exports = {
         },
         ETHEREUM_MAINNET: {
             NAME: 'ethereum',
-            RPC: 'https://mainnet.infura.io/v3/5583a1ce54604375b02d6246936d9d53',
+            RPC: 'https://mainnet.infura.io/v3/2851f8f32e8f4476bb4b9a7b9c6e5292',
             CHAIN_ID: 1
         }
     }

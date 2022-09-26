@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { AlphaRouter } = require("@uniswap/smart-order-router");
+const { AlphaRouter, NATIVE_CURRENCY, WRAPPED_NATIVE_CURRENCY, ExtendedEther } = require("@uniswap/smart-order-router");
 const { Token, CurrencyAmount, TradeType, Percent, Ether } = require('@uniswap/sdk-core')
 const { ethers, BigNumber } = require('ethers')
 const { NETWORK, V3_SWAP_ROUTER_ADDRESS, ETHEREUM_ADDRESS, ERROR_MESSAGES: { NULL_ROUTE, INVARIANT_ADDRESS, QUOTE_OF_NULL, TOKEN_PAIR_DOESNOT_EXIST, INVALID_CHAIN_ERORR } } = require('./const')
@@ -34,7 +34,7 @@ const transactionBuilder = async ({
 
         let fromToken;
         if (fromContractAddress.toLowerCase() === ETHEREUM_ADDRESS.toLowerCase() || fromContractAddress.toLowerCase() === 'eth'.toLowerCase()) {
-            fromToken = new Ether(network.CHAIN_ID).wrapped
+            fromToken = ExtendedEther.onChain(network.CHAIN_ID)
         }
         else {
             fromToken = new Token(
@@ -46,8 +46,7 @@ const transactionBuilder = async ({
 
         let toToken;
         if (toContractAddress.toLowerCase() === ETHEREUM_ADDRESS.toLowerCase() || toContractAddress.toLowerCase() === 'eth'.toLowerCase()) {
-            toToken = new Ether(network.CHAIN_ID).wrapped
-
+            toToken = ExtendedEther.onChain(network.CHAIN_ID)
         }
         else {
             toToken = new Token(

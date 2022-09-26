@@ -10,4 +10,4 @@ node_modules
 .vscode
 
 # Test file
-test.js
+*test.js
