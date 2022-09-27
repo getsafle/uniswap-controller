@@ -97,46 +97,6 @@ const transactionBuilder = async ({
     }
 }
 
-const ethWethTransactionBuilder = async ({
-    walletAddress,
-    toContractAddress,
-    toContractDecimal,
-    fromContractAddress,
-    fromContractDecimal,
-    toQuantity,
-    fromQuantity,
-    slippageTolerance
-}) => {
-    try {
-        const web3Provider = new ethers.providers.JsonRpcProvider(INFURA_RPC);
-        if (isAddressETH(fromContractAddress) && isAddressWETH(toContractAddress)) {
-            const contract = new Contract(toContractAddress, WRAPPED_ETH_CONTRACT_ABI, web3Provider);
-            const tx = {
-                from: walletAddress,
-                to: toContractAddress,
-                data: contract.interface.encodeFunctionData('deposit', []),
-                gas: web3Utils.hexToNumber((await contract.estimateGas.deposit())._hex) * 10,
-                gasPrice: web3Utils.hexToNumber((await web3Provider.getGasPrice())._hex),
-                value: fromQuantity
-            };
-            return { tx }
-        } else {
-            const contract = new Contract(fromContractAddress, WRAPPED_ETH_CONTRACT_ABI, web3Provider);
-            const tx = {
-                from: walletAddress,
-                to: fromContractAddress,
-                data: contract.interface.encodeFunctionData('withdraw', [fromQuantity]),
-                gas: web3Utils.hexToNumber((await contract.estimateGas.withdraw(fromQuantity))._hex) * 10,
-                gasPrice: web3Utils.hexToNumber((await web3Provider.getGasPrice())._hex),
-                value: '0'
-            };
-            return { tx }
-        }
-    } catch (error) {
-        throw error
-    }
-}
-
 const rawTransaction = async ({
     walletAddress,
     toContractAddress,
@@ -148,7 +108,7 @@ const rawTransaction = async ({
     slippageTolerance
 }, network) => {
     try {
-        await checkBalance(fromContractAddress, walletAddress, fromQuantity)
+        await checkBalance(fromContractAddress, walletAddress, fromQuantity, network)
         const { route, to, from } = await transactionBuilder({
             walletAddress,
             toContractAddress,
@@ -271,10 +231,10 @@ const getBaseURL = async (chain) => {
 
 }
 
-const checkBalance = async (fromContractAddress, walletAddress, fromQuantity) => {
+const checkBalance = async (fromContractAddress, walletAddress, fromQuantity, network) => {
     try {
         let tokenBalance;
-        const web3Provider = new ethers.providers.JsonRpcProvider(INFURA_RPC);
+        const web3Provider = new ethers.providers.JsonRpcProvider(network.RPC);
         if (isAddressETH(fromContractAddress)) {
             tokenBalance = await web3Provider.getBalance(walletAddress)
         } else {
@@ -292,13 +252,13 @@ const checkBalance = async (fromContractAddress, walletAddress, fromQuantity) =>
 
 const approvalRawTransaction = async ({
     fromContractAddress, walletAddress, fromQuantity
-}) => {
+}, url) => {
     try {
-        await checkBalance(fromContractAddress, walletAddress, fromQuantity)
+        await checkBalance(fromContractAddress, walletAddress, fromQuantity, url)
         if (isAddressETH(fromContractAddress))
             return { response: true }
         else {
-            const web3Provider = new ethers.providers.JsonRpcProvider(INFURA_RPC);
+            const web3Provider = new ethers.providers.JsonRpcProvider(url.RPC);
             const contract = new Contract(fromContractAddress, TOKEN_CONTRACT_ABI, web3Provider);
             const checkAllowance = await contract.allowance(walletAddress, V3_SWAP_ROUTER_ADDRESS);
             if (Number(checkAllowance) < fromQuantity) {

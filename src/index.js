@@ -99,6 +99,10 @@ class Uniswap {
 
     async approvalRawTransaction({ fromContractAddress, walletAddress, fromQuantity }) {
         try {
+            const url = await helper.getBaseURL(this.chain);
+            if (url.error) {
+                throw helper.setErrorResponse(url.error)
+            }
             const _fromContractAddress = web3Utils.toChecksumAddress(fromContractAddress)
             const _walletAddress = web3Utils.toChecksumAddress(walletAddress)
             const { response } = await helper.approvalRawTransaction(
@@ -106,7 +110,7 @@ class Uniswap {
                     walletAddress: _walletAddress,
                     fromContractAddress: _fromContractAddress,
                     fromQuantity,
-                });
+                }, url);
             return response;
         } catch (error) {
             throw helper.setErrorResponse(error)

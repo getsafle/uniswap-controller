@@ -12,7 +12,7 @@ module.exports = {
     NETWORK: {
         POLYGON_MAINNET: {
             NAME: 'polygon',
-            RPC: 'https://rpc-mainnet.maticvigil.com',
+            RPC: 'https://polygon-mainnet.infura.io/v3/2851f8f32e8f4476bb4b9a7b9c6e5292',
             CHAIN_ID: 137
         },
         ETHEREUM_MAINNET: {
