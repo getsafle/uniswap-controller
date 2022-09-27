@@ -1,9 +1,10 @@
 const axios = require('axios');
 const { AlphaRouter, NATIVE_CURRENCY, WRAPPED_NATIVE_CURRENCY, ExtendedEther } = require("@uniswap/smart-order-router");
 const { Token, CurrencyAmount, TradeType, Percent, Ether } = require('@uniswap/sdk-core')
-const { ethers, BigNumber } = require('ethers')
-const { NETWORK, V3_SWAP_ROUTER_ADDRESS, ETHEREUM_ADDRESS, ERROR_MESSAGES: { NULL_ROUTE, INVARIANT_ADDRESS, QUOTE_OF_NULL, TOKEN_PAIR_DOESNOT_EXIST, INVALID_CHAIN_ERORR } } = require('./const')
+const { ethers, BigNumber, Contract } = require('ethers')
+const { NETWORK, V3_SWAP_ROUTER_ADDRESS, ETHEREUM_ADDRESS, ERROR_MESSAGES: { NULL_ROUTE, INVARIANT_ADDRESS, QUOTE_OF_NULL, TOKEN_PAIR_DOESNOT_EXIST, INVALID_CHAIN_ERORR, INSUFFICIENT_BALANCE } } = require('./const')
 const web3Utils = require('web3-utils')
+const { TOKEN_CONTRACT_ABI, WRAPPED_ETH_CONTRACT_ABI } = require('./tokenABI')
 
 const getRequest = async ({ url }) => {
     try {
@@ -16,6 +17,20 @@ const getRequest = async ({ url }) => {
         return { error: [{ name: 'server', message: `There is some issue, Please try after some time. ${error.message && error.message}`, data: error.response && error.response.data ? error.response.data : {} }] };
     }
 };
+
+const isAddressETH = (address) => {
+    if (address.toLowerCase() === ETHEREUM_ADDRESS.toLowerCase() || address.toLowerCase() === 'eth'.toLowerCase())
+        return true;
+    else
+        return false;
+}
+
+const isAddressWETH = (address) => {
+    if (address.toLowerCase() === WRAPPED_ETHEREUM_ADDRESS.toLowerCase())
+        return true;
+    else
+        return false;
+}
 
 const transactionBuilder = async ({
     walletAddress,
@@ -76,13 +91,50 @@ const transactionBuilder = async ({
                 ...routeOptions
             }
         );
-
         return { route, to: V3_SWAP_ROUTER_ADDRESS, from: walletAddress };
-
     } catch (error) {
         throw error
     }
+}
 
+const ethWethTransactionBuilder = async ({
+    walletAddress,
+    toContractAddress,
+    toContractDecimal,
+    fromContractAddress,
+    fromContractDecimal,
+    toQuantity,
+    fromQuantity,
+    slippageTolerance
+}) => {
+    try {
+        const web3Provider = new ethers.providers.JsonRpcProvider(INFURA_RPC);
+        if (isAddressETH(fromContractAddress) && isAddressWETH(toContractAddress)) {
+            const contract = new Contract(toContractAddress, WRAPPED_ETH_CONTRACT_ABI, web3Provider);
+            const tx = {
+                from: walletAddress,
+                to: toContractAddress,
+                data: contract.interface.encodeFunctionData('deposit', []),
+                gas: web3Utils.hexToNumber((await contract.estimateGas.deposit())._hex) * 10,
+                gasPrice: web3Utils.hexToNumber((await web3Provider.getGasPrice())._hex),
+                value: fromQuantity
+            };
+            return { tx }
+        } else {
+            const contract = new Contract(fromContractAddress, WRAPPED_ETH_CONTRACT_ABI, web3Provider);
+            const tx = {
+                from: walletAddress,
+                to: fromContractAddress,
+                data: contract.interface.encodeFunctionData('withdraw', [fromQuantity]),
+                gas: web3Utils.hexToNumber((await contract.estimateGas.withdraw(fromQuantity))._hex) * 10,
+                gasPrice: web3Utils.hexToNumber((await web3Provider.getGasPrice())._hex),
+                value: '0'
+            };
+            return { tx }
+        }
+    } catch (error) {
+        throw error
+    }
 }
 
 const rawTransaction = async ({
@@ -96,6 +148,7 @@ const rawTransaction = async ({
     slippageTolerance
 }, network) => {
     try {
+        await checkBalance(fromContractAddress, walletAddress, fromQuantity)
         const { route, to, from } = await transactionBuilder({
             walletAddress,
             toContractAddress,
@@ -193,6 +246,8 @@ const setErrorResponse = (err) => {
         case QUOTE_OF_NULL:
         case NULL_ROUTE:
             return { err, message: TOKEN_PAIR_DOESNOT_EXIST }
+        case INSUFFICIENT_BALANCE:
+            return { err, message: INSUFFICIENT_BALANCE }
         default:
             return { err, message: err.message }
     }
@@ -216,5 +271,53 @@ const getBaseURL = async (chain) => {
 
 }
 
-module.exports = { getRequest, rawTransaction, getExchangeRate, getEstimatedGas, setErrorResponse, getBaseURL };
+const checkBalance = async (fromContractAddress, walletAddress, fromQuantity) => {
+    try {
+        let tokenBalance;
+        const web3Provider = new ethers.providers.JsonRpcProvider(INFURA_RPC);
+        if (isAddressETH(fromContractAddress)) {
+            tokenBalance = await web3Provider.getBalance(walletAddress)
+        } else {
+            const contract = new Contract(fromContractAddress, TOKEN_CONTRACT_ABI, web3Provider);
+            tokenBalance = await contract.balanceOf(walletAddress);
+        }
+        if (Number(tokenBalance) < fromQuantity)
+            throw new Error(INSUFFICIENT_BALANCE)
+        else
+            return true
+    } catch (err) {
+        throw err
+    }
+}
 
+const approvalRawTransaction = async ({
+    fromContractAddress, walletAddress, fromQuantity
+}) => {
+    try {
+        await checkBalance(fromContractAddress, walletAddress, fromQuantity)
+        if (isAddressETH(fromContractAddress))
+            return { response: true }
+        else {
+            const web3Provider = new ethers.providers.JsonRpcProvider(INFURA_RPC);
+            const contract = new Contract(fromContractAddress, TOKEN_CONTRACT_ABI, web3Provider);
+            const checkAllowance = await contract.allowance(walletAddress, V3_SWAP_ROUTER_ADDRESS);
+            if (Number(checkAllowance) < fromQuantity) {
+                const tx = {
+                    from: walletAddress,
+                    to: fromContractAddress,
+                    data: contract.interface.encodeFunctionData('approve', [V3_SWAP_ROUTER_ADDRESS, fromQuantity]),
+                    gas: web3Utils.hexToNumber((await contract.estimateGas.approve(V3_SWAP_ROUTER_ADDRESS, fromQuantity, { from: walletAddress }))._hex),
+                    gasPrice: web3Utils.hexToNumber((await web3Provider.getGasPrice())._hex),
+                    value: '0'
+                };
+                return { response: tx }
+            }
+            else
+                return { response: true }
+        }
+    } catch (err) {
+        throw err
+    }
+}
+
+module.exports = { getRequest, rawTransaction, getExchangeRate, getEstimatedGas, setErrorResponse, approvalRawTransaction, getBaseURL };

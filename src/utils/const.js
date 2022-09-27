@@ -5,6 +5,7 @@ module.exports = {
         NULL_ROUTE: 'Route cannot be null',
         INVARIANT_ADDRESS: 'Invariant failed: ADDRESSES',
         QUOTE_OF_NULL: "Cannot read property 'quote' of null",
+        INSUFFICIENT_BALANCE: "Insufficient balance.",
         TOKEN_PAIR_DOESNOT_EXIST: "Provided token pair is not supported",
         INVALID_CHAIN_ERORR: "Invalid chain selected",
     },

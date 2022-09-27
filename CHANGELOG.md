@@ -17,6 +17,27 @@
 - Updated ETH support
 - Updated error messages
 
-### 1.0.3 (2022-05-23)
+### 1.0.3 (2022-06-06)
+
+- Added approvalRawTransaction() to create an approve transaction for tokens swap.
+- Created checkBalance() to check the available balance.
+
+### 1.0.4 (2022-06-07)
+
+- Added ETH and WETH swap support using deposit and withdraw
+
+### 1.0.5 (2022-07-13)
+
+- Updated uniswap package versions
+
+### 1.0.6 (2022-08-17)
+
+- Updated infura URL
+
+### 1.0.7 (2022-08-17)
+
+- Fixed gas calculations in `approvalRawTransaction`
+
+### 1.1.0 (2022-09-27)
 
 - Added support for polygon chain

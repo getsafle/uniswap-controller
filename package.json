@@ -1,6 +1,6 @@
 {
   "name": "@getsafle/uniswap-controller",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Uniswap controller for safle token swaps",
   "main": "src/index.js",
   "scripts": {
