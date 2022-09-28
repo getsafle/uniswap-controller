@@ -37,3 +37,12 @@
 ### 1.0.7 (2022-08-17)
 
 - Fixed gas calculations in `approvalRawTransaction`
+
+### 1.1.0 (2022-09-27)
+
+- Added support for polygon chain
+
+
+### 1.1.0 (2022-09-28)
+
+- Updated method to get list of supported tokens

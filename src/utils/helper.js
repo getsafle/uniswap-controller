@@ -1,8 +1,8 @@
 const axios = require('axios');
-const { AlphaRouter } = require("@uniswap/smart-order-router");
+const { AlphaRouter, NATIVE_CURRENCY, WRAPPED_NATIVE_CURRENCY, ExtendedEther } = require("@uniswap/smart-order-router");
 const { Token, CurrencyAmount, TradeType, Percent, Ether } = require('@uniswap/sdk-core')
 const { ethers, BigNumber, Contract } = require('ethers')
-const { MAINNET_CHAIN_ID, V3_SWAP_ROUTER_ADDRESS, ETHEREUM_ADDRESS, WRAPPED_ETHEREUM_ADDRESS, INFURA_RPC, ERROR_MESSAGES: { NULL_ROUTE, INVARIANT_ADDRESS, QUOTE_OF_NULL, TOKEN_PAIR_DOESNOT_EXIST, INSUFFICIENT_BALANCE } } = require('./const')
+const { NETWORK, V3_SWAP_ROUTER_ADDRESS, ETHEREUM_ADDRESS, ERROR_MESSAGES: { NULL_ROUTE, INVARIANT_ADDRESS, QUOTE_OF_NULL, TOKEN_PAIR_DOESNOT_EXIST, INVALID_CHAIN_ERORR, INSUFFICIENT_BALANCE } } = require('./const')
 const web3Utils = require('web3-utils')
 const { TOKEN_CONTRACT_ABI, WRAPPED_ETH_CONTRACT_ABI } = require('./tokenABI')
 
@@ -41,30 +41,31 @@ const transactionBuilder = async ({
     toQuantity,
     fromQuantity,
     slippageTolerance
-}) => {
+}, network) => {
     try {
-        const web3Provider = new ethers.providers.JsonRpcProvider(INFURA_RPC);
-        const router = new AlphaRouter({ chainId: MAINNET_CHAIN_ID, provider: web3Provider });
+        const web3Provider = new ethers.providers.JsonRpcProvider(network.RPC);
+
+        const router = new AlphaRouter({ chainId: network.CHAIN_ID, provider: web3Provider });
 
         let fromToken;
-        if (isAddressETH(fromContractAddress)) {
-            fromToken = new Ether(MAINNET_CHAIN_ID)
+        if (fromContractAddress.toLowerCase() === ETHEREUM_ADDRESS.toLowerCase() || fromContractAddress.toLowerCase() === 'eth'.toLowerCase()) {
+            fromToken = ExtendedEther.onChain(network.CHAIN_ID)
         }
         else {
             fromToken = new Token(
-                MAINNET_CHAIN_ID,
+                network.CHAIN_ID,
                 fromContractAddress,
                 fromContractDecimal
             );
         }
 
         let toToken;
-        if (isAddressETH(toContractAddress)) {
-            toToken = new Ether(MAINNET_CHAIN_ID)
+        if (toContractAddress.toLowerCase() === ETHEREUM_ADDRESS.toLowerCase() || toContractAddress.toLowerCase() === 'eth'.toLowerCase()) {
+            toToken = ExtendedEther.onChain(network.CHAIN_ID)
         }
         else {
             toToken = new Token(
-                MAINNET_CHAIN_ID,
+                network.CHAIN_ID,
                 toContractAddress,
                 toContractDecimal
             );
@@ -96,46 +97,6 @@ const transactionBuilder = async ({
     }
 }
 
-const ethWethTransactionBuilder = async ({
-    walletAddress,
-    toContractAddress,
-    toContractDecimal,
-    fromContractAddress,
-    fromContractDecimal,
-    toQuantity,
-    fromQuantity,
-    slippageTolerance
-}) => {
-    try {
-        const web3Provider = new ethers.providers.JsonRpcProvider(INFURA_RPC);
-        if (isAddressETH(fromContractAddress) && isAddressWETH(toContractAddress)) {
-            const contract = new Contract(toContractAddress, WRAPPED_ETH_CONTRACT_ABI, web3Provider);
-            const tx = {
-                from: walletAddress,
-                to: toContractAddress,
-                data: contract.interface.encodeFunctionData('deposit', []),
-                gas: web3Utils.hexToNumber((await contract.estimateGas.deposit())._hex) * 10,
-                gasPrice: web3Utils.hexToNumber((await web3Provider.getGasPrice())._hex),
-                value: fromQuantity
-            };
-            return { tx }
-        } else {
-            const contract = new Contract(fromContractAddress, WRAPPED_ETH_CONTRACT_ABI, web3Provider);
-            const tx = {
-                from: walletAddress,
-                to: fromContractAddress,
-                data: contract.interface.encodeFunctionData('withdraw', [fromQuantity]),
-                gas: web3Utils.hexToNumber((await contract.estimateGas.withdraw(fromQuantity))._hex) * 10,
-                gasPrice: web3Utils.hexToNumber((await web3Provider.getGasPrice())._hex),
-                value: '0'
-            };
-            return { tx }
-        }
-    } catch (error) {
-        throw error
-    }
-}
-
 const rawTransaction = async ({
     walletAddress,
     toContractAddress,
@@ -145,44 +106,31 @@ const rawTransaction = async ({
     toQuantity,
     fromQuantity,
     slippageTolerance
-}) => {
+}, network) => {
     try {
-        await checkBalance(fromContractAddress, walletAddress, fromQuantity)
-        if ((isAddressETH(fromContractAddress) && isAddressWETH(toContractAddress)) || (isAddressETH(toContractAddress) && isAddressWETH(fromContractAddress))) {
-            const { tx } = await ethWethTransactionBuilder({
-                walletAddress,
-                toContractAddress,
-                toContractDecimal,
-                fromContractAddress,
-                fromContractDecimal,
-                toQuantity,
-                fromQuantity,
-                slippageTolerance
-            })
-            return { response: tx };
-        } else {
-            const { route, to, from } = await transactionBuilder({
-                walletAddress,
-                toContractAddress,
-                toContractDecimal,
-                fromContractAddress,
-                fromContractDecimal,
-                toQuantity,
-                fromQuantity,
-                slippageTolerance
-            })
-            if (!route)
-                throw new Error(NULL_ROUTE)
-            const response = {
-                data: route.methodParameters.calldata,
-                to,
-                value: (web3Utils.hexToNumber(BigNumber.from(route.methodParameters.value)._hex)).toString(), // value of ether to send
-                from,
-                gas: web3Utils.hexToNumber((route.estimatedGasUsed.mul(10))._hex),
-                gasPrice: (web3Utils.hexToNumber(route.gasPriceWei._hex)).toString()
-            };
-            return { response };
-        }
+        await checkBalance(fromContractAddress, walletAddress, fromQuantity, network)
+        const { route, to, from } = await transactionBuilder({
+            walletAddress,
+            toContractAddress,
+            toContractDecimal,
+            fromContractAddress,
+            fromContractDecimal,
+            toQuantity,
+            fromQuantity,
+            slippageTolerance
+        }, network)
+        if (!route)
+            throw new Error(NULL_ROUTE)
+        const response = {
+            data: route.methodParameters.calldata,
+            to,
+            value: (web3Utils.hexToNumber(BigNumber.from(route.methodParameters.value)._hex)).toString(), // value of ether to send
+            from,
+            gas: web3Utils.hexToNumber((route.estimatedGasUsed.mul(10))._hex),
+            gasPrice: (web3Utils.hexToNumber(route.gasPriceWei._hex)).toString()
+        };
+
+        return { response };
     } catch (error) {
         throw error
     }
@@ -195,45 +143,27 @@ const getExchangeRate = async ({
     fromContractDecimal,
     fromQuantity,
     slippageTolerance
-}) => {
+}, network) => {
     try {
-        if ((isAddressETH(fromContractAddress) && isAddressWETH(toContractAddress)) || (isAddressETH(toContractAddress) && isAddressWETH(fromContractAddress))) {
-            const { tx } = await ethWethTransactionBuilder({
-                walletAddress: null,
-                toContractAddress,
-                toContractDecimal,
-                fromContractAddress,
-                fromContractDecimal,
-                toQuantity: 0,
-                fromQuantity,
-                slippageTolerance
-            })
-            const response = {
-                toTokenAmount: fromQuantity.toString(),
-                fromTokenAmount: fromQuantity.toString(),
-                estimatedGas: tx.gas * 10
-            };
-            return { response };
-        } else {
-            const { route } = await transactionBuilder({
-                walletAddress: null,
-                toContractAddress,
-                toContractDecimal,
-                fromContractAddress,
-                fromContractDecimal,
-                toQuantity: 0,
-                fromQuantity,
-                slippageTolerance
-            })
-            if (!route)
-                throw new Error(NULL_ROUTE)
-            const response = {
-                toTokenAmount: (Number(route.quote.toExact()) * (10 ** toContractDecimal)).toString(),
-                fromTokenAmount: fromQuantity.toString(),
-                estimatedGas: web3Utils.hexToNumber((route.estimatedGasUsed.mul(10))._hex)
-            };
-            return { response };
-        }
+        const { route } = await transactionBuilder({
+            walletAddress: null,
+            toContractAddress,
+            toContractDecimal,
+            fromContractAddress,
+            fromContractDecimal,
+            toQuantity: 0,
+            fromQuantity,
+            slippageTolerance
+        }, network)
+        if (!route)
+            throw new Error(NULL_ROUTE)
+        const response = {
+            toTokenAmount: (Number(route.quote.toExact()) * (10 ** toContractDecimal)).toString(),
+            fromTokenAmount: fromQuantity.toString(),
+            estimatedGas: web3Utils.hexToNumber(route.estimatedGasUsed._hex)
+        };
+
+        return { response };
     } catch (error) {
         throw error
     }
@@ -246,41 +176,25 @@ const getEstimatedGas = async ({
     fromContractDecimal,
     fromQuantity,
     slippageTolerance
-}) => {
+}, network) => {
     try {
-        if ((isAddressETH(fromContractAddress) && isAddressWETH(toContractAddress)) || (isAddressETH(toContractAddress) && isAddressWETH(fromContractAddress))) {
-            const { tx } = await ethWethTransactionBuilder({
-                walletAddress: null,
-                toContractAddress,
-                toContractDecimal,
-                fromContractAddress,
-                fromContractDecimal,
-                toQuantity: 0,
-                fromQuantity,
-                slippageTolerance
-            })
-            const response = {
-                estimatedGas: tx.gas * 10
-            };
-            return { response };
-        } else {
-            const { route } = await transactionBuilder({
-                walletAddress: null,
-                toContractAddress,
-                toContractDecimal,
-                fromContractAddress,
-                fromContractDecimal,
-                toQuantity: 0,
-                fromQuantity,
-                slippageTolerance
-            })
-            if (!route)
-                throw new Error(NULL_ROUTE)
-            const response = {
-                estimatedGas: web3Utils.hexToNumber((route.estimatedGasUsed.mul(10))._hex)
-            };
-            return { response };
-        }
+        const { route } = await transactionBuilder({
+            walletAddress: null,
+            toContractAddress,
+            toContractDecimal,
+            fromContractAddress,
+            fromContractDecimal,
+            toQuantity: 0,
+            fromQuantity,
+            slippageTolerance
+        }, network)
+        if (!route)
+            throw new Error(NULL_ROUTE)
+        const response = {
+            estimatedGas: web3Utils.hexToNumber(route.estimatedGasUsed._hex)
+        };
+
+        return { response };
     } catch (error) {
         throw error
     }
@@ -299,10 +213,28 @@ const setErrorResponse = (err) => {
     }
 }
 
-const checkBalance = async (fromContractAddress, walletAddress, fromQuantity) => {
+const getBaseURL = async (chain) => {
+    switch (chain) {
+        case NETWORK.POLYGON_MAINNET.NAME:
+            return {
+                RPC: NETWORK.POLYGON_MAINNET.RPC,
+                CHAIN_ID: NETWORK.POLYGON_MAINNET.CHAIN_ID
+            }
+        case NETWORK.ETHEREUM_MAINNET.NAME:
+            return {
+                RPC: NETWORK.ETHEREUM_MAINNET.RPC,
+                CHAIN_ID: NETWORK.ETHEREUM_MAINNET.CHAIN_ID
+            }
+        default:
+            return { error: { message: INVALID_CHAIN_ERORR } }
+    }
+
+}
+
+const checkBalance = async (fromContractAddress, walletAddress, fromQuantity, network) => {
     try {
         let tokenBalance;
-        const web3Provider = new ethers.providers.JsonRpcProvider(INFURA_RPC);
+        const web3Provider = new ethers.providers.JsonRpcProvider(network.RPC);
         if (isAddressETH(fromContractAddress)) {
             tokenBalance = await web3Provider.getBalance(walletAddress)
         } else {
@@ -320,13 +252,13 @@ const checkBalance = async (fromContractAddress, walletAddress, fromQuantity) =>
 
 const approvalRawTransaction = async ({
     fromContractAddress, walletAddress, fromQuantity
-}) => {
+}, url) => {
     try {
-        await checkBalance(fromContractAddress, walletAddress, fromQuantity)
+        await checkBalance(fromContractAddress, walletAddress, fromQuantity, url)
         if (isAddressETH(fromContractAddress))
             return { response: true }
         else {
-            const web3Provider = new ethers.providers.JsonRpcProvider(INFURA_RPC);
+            const web3Provider = new ethers.providers.JsonRpcProvider(url.RPC);
             const contract = new Contract(fromContractAddress, TOKEN_CONTRACT_ABI, web3Provider);
             const checkAllowance = await contract.allowance(walletAddress, V3_SWAP_ROUTER_ADDRESS);
             if (Number(checkAllowance) < fromQuantity) {
@@ -348,5 +280,4 @@ const approvalRawTransaction = async ({
     }
 }
 
-module.exports = { getRequest, rawTransaction, getExchangeRate, getEstimatedGas, setErrorResponse, approvalRawTransaction };
-
+module.exports = { getRequest, rawTransaction, getExchangeRate, getEstimatedGas, setErrorResponse, approvalRawTransaction, getBaseURL };
