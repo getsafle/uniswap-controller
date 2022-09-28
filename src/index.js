@@ -1,6 +1,7 @@
 const config = require('./config');
 const helper = require('./utils/helper')
 const web3Utils = require('web3-utils')
+const tokenList = require('@getsafle/safle-token-lists')
 
 class Uniswap {
 
@@ -13,16 +14,8 @@ class Uniswap {
     }
 
     async getSupportedTokens() {
-        try {
-            const url = await helper.getBaseURL(this.chain);
-            if (url.error) {
-                throw helper.setErrorResponse(url.error)
-            }
-            const { response } = await helper.getRequest({ url: config.SUPPORTED_TOKENS_URL }, url);
-            return response;
-        } catch (error) {
-            throw helper.setErrorResponse(error)
-        }
+        const tokens = await tokenList.getTokensUniswap(this.chain);
+        return tokens;
     }
 
     async getExchangeRate({ toContractAddress, toContractDecimal, fromContractAddress, fromContractDecimal, fromQuantity, slippageTolerance }) {
