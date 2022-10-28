@@ -88,3 +88,8 @@ This function will call the approval smart contract function to approve spending
 ```js
 await controller.approvalRawTransaction({ fromContractAddress, walletAddress, fromQuantity })
 ```
+
+Supported Chains :
+
+- Ethereum
+- Polygon
