@@ -38,6 +38,15 @@
 
 - Fixed gas calculations in `approvalRawTransaction`
 
-### 1.0.8 (2022-09-12)
+### 1.1.0 (2022-09-27)
+
+- Added support for polygon chain
+
+
+### 1.1.0 (2022-09-28)
+
+- Updated method to get list of supported tokens
+
+### 1.1.2 (2022-10-28)
 
 - Updated the README file with the latest functional & non-functional documentation.

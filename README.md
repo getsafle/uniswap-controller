@@ -17,7 +17,7 @@ Initialize the constructor,
 ```js
 const UniSwap = require('@getsafle/uniswap-controller');
 
-const controller = new UniSwap();
+const controller = new UniSwap(chain);
 ```
 
 <br>
@@ -28,6 +28,16 @@ This function will give us the list of all tokens supported by Uniswap.
 
 ```js
 await controller.getSupportedTokens()
+```
+
+<br>
+
+> Get supported chains
+
+This function will give us the list of all supported chains.
+
+```js
+await controller.getSupportedChains()
 ```
 
 <br>
