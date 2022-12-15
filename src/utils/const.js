@@ -13,11 +13,13 @@ module.exports = {
         POLYGON_MAINNET: {
             NAME: 'polygon',
             RPC: 'https://polygon-mainnet.infura.io/v3/2851f8f32e8f4476bb4b9a7b9c6e5292',
+            GAS_API: 'https://gasstation-mainnet.matic.network/v2',
             CHAIN_ID: 137
         },
         ETHEREUM_MAINNET: {
             NAME: 'ethereum',
             RPC: 'https://mainnet.infura.io/v3/2851f8f32e8f4476bb4b9a7b9c6e5292',
+            GAS_API: 'https://gas-api.metaswap.codefi.network/networks/1/suggestedGasFees',
             CHAIN_ID: 1
         }
     }

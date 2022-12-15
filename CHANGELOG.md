@@ -50,3 +50,7 @@
 ### 1.1.2 (2022-12-14)
 
 - Functions `approvalRawTransaction()` and `getRawTransaction()` will throw an error `Insufficient balance.` if the `from` address does not have enough assets to swap.
+
+### 1.1.3 (2022-12-15)
+
+- Functions `approvalRawTransaction()` and `getRawTransaction()` will return the type2 raw transaction.
