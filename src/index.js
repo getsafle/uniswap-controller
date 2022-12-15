@@ -99,8 +99,8 @@ class Uniswap {
                 data: response.data,
                 value: Web3.utils.numberToHex(response.value),
                 gasLimit: response.gas,
-                maxFeePerGas: Web3.utils.numberToHex(Web3.utils.toWei(gasData.maxFeePerGas.toString(), 'gwei')),
-                maxPriorityFeePerGas: Web3.utils.numberToHex(Web3.utils.toWei(gasData.maxPriorityFeePerGas.toString(), 'gwei')),
+                maxFeePerGas: Web3.utils.numberToHex(Web3.utils.toWei(Number(gasData.maxFeePerGas).toFixed(4), 'gwei')),
+                maxPriorityFeePerGas: Web3.utils.numberToHex(Web3.utils.toWei(Number(gasData.maxPriorityFeePerGas).toFixed(4), 'gwei')),
                 nonce: await web3.eth.getTransactionCount(response.from),
                 chainId: url.CHAIN_ID,
             }
@@ -142,8 +142,8 @@ class Uniswap {
                     data: response.data,
                     value: Web3.utils.numberToHex(response.value),
                     gasLimit: response.gas,
-                    maxFeePerGas: Web3.utils.numberToHex(Web3.utils.toWei(gasData.maxFeePerGas, 'gwei')),
-                    maxPriorityFeePerGas: Web3.utils.numberToHex(Web3.utils.toWei(gasData.maxPriorityFeePerGas, 'gwei')),
+                    maxFeePerGas: Web3.utils.numberToHex(Web3.utils.toWei(Number(gasData.maxFeePerGas).toFixed(4), 'gwei')),
+                    maxPriorityFeePerGas: Web3.utils.numberToHex(Web3.utils.toWei(Number(gasData.maxPriorityFeePerGas).toFixed(4), 'gwei')),
                     nonce: await web3.eth.getTransactionCount(response.from),
                     chainId: url.CHAIN_ID,
                 }
