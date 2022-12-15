@@ -213,17 +213,19 @@ const setErrorResponse = (err) => {
     }
 }
 
-const getBaseURL = async (chain) => {
+const getBaseURL = (chain) => {
     switch (chain) {
         case NETWORK.POLYGON_MAINNET.NAME:
             return {
                 RPC: NETWORK.POLYGON_MAINNET.RPC,
-                CHAIN_ID: NETWORK.POLYGON_MAINNET.CHAIN_ID
+                CHAIN_ID: NETWORK.POLYGON_MAINNET.CHAIN_ID,
+                GAS_API: NETWORK.POLYGON_MAINNET.GAS_API,
             }
         case NETWORK.ETHEREUM_MAINNET.NAME:
             return {
                 RPC: NETWORK.ETHEREUM_MAINNET.RPC,
-                CHAIN_ID: NETWORK.ETHEREUM_MAINNET.CHAIN_ID
+                CHAIN_ID: NETWORK.ETHEREUM_MAINNET.CHAIN_ID,
+                GAS_API: NETWORK.ETHEREUM_MAINNET.GAS_API,
             }
         default:
             return { error: { message: INVALID_CHAIN_ERORR } }
@@ -280,4 +282,28 @@ const approvalRawTransaction = async ({
     }
 }
 
-module.exports = { getRequest, rawTransaction, getExchangeRate, getEstimatedGas, setErrorResponse, approvalRawTransaction, getBaseURL };
+const getGasParams = async(url, chain) => {
+    const { response, error } = await getRequest({ url });
+
+    if (error) {
+        throw setErrorResponse(error)
+    }
+
+    let result;
+
+    if (chain === 'ethereum') {
+        result = {
+            maxFeePerGas: response.medium.suggestedMaxFeePerGas,
+            maxPriorityFeePerGas: response.medium.suggestedMaxPriorityFeePerGas,
+        }
+    } else {
+        result = {
+            maxFeePerGas: response.standard.maxFee,
+            maxPriorityFeePerGas: response.standard.maxPriorityFee,
+        }
+    }
+
+    return result;
+}
+
+module.exports = { getRequest, rawTransaction, getExchangeRate, getEstimatedGas, setErrorResponse, approvalRawTransaction, getBaseURL, getGasParams };

@@ -1,7 +1,8 @@
 const config = require('./config');
 const helper = require('./utils/helper')
 const web3Utils = require('web3-utils')
-const tokenList = require('@getsafle/safle-token-lists')
+const tokenList = require('@getsafle/safle-token-lists');
+const Web3 = require('web3');
 
 class Uniswap {
 
@@ -20,7 +21,7 @@ class Uniswap {
 
     async getExchangeRate({ toContractAddress, toContractDecimal, fromContractAddress, fromContractDecimal, fromQuantity, slippageTolerance }) {
         try {
-            const url = await helper.getBaseURL(this.chain);
+            const url = helper.getBaseURL(this.chain);
             if (url.error) {
                 throw helper.setErrorResponse(url.error)
             }
@@ -43,7 +44,7 @@ class Uniswap {
 
     async getEstimatedGas({ toContractAddress, toContractDecimal, fromContractAddress, fromContractDecimal, fromQuantity, slippageTolerance }) {
         try {
-            const url = await helper.getBaseURL(this.chain);
+            const url = helper.getBaseURL(this.chain);
             if (url.error) {
                 throw helper.setErrorResponse(url.error)
             }
@@ -66,7 +67,8 @@ class Uniswap {
 
     async getRawTransaction({ walletAddress, toContractAddress, toContractDecimal, fromContractAddress, fromContractDecimal, toQuantity, fromQuantity, slippageTolerance }) {
         try {
-            const url = await helper.getBaseURL(this.chain);
+            const url = helper.getBaseURL(this.chain);
+
             if (url.error) {
                 throw helper.setErrorResponse(url.error)
             }
@@ -83,8 +85,27 @@ class Uniswap {
                     toQuantity,
                     fromQuantity,
                     slippageTolerance
-                }, url);
-            return response;
+                },
+                url
+            );
+
+            const web3 = new Web3(new Web3.providers.HttpProvider(url.RPC));
+
+            const gasData = await helper.getGasParams(url.GAS_API, this.chain);
+
+            const rawTransaction = {
+                to: response.to,
+                from: response.from,
+                data: response.data,
+                value: Web3.utils.numberToHex(response.value),
+                gasLimit: response.gas,
+                maxFeePerGas: Web3.utils.numberToHex(Web3.utils.toWei(gasData.maxFeePerGas.toString(), 'gwei')),
+                maxPriorityFeePerGas: Web3.utils.numberToHex(Web3.utils.toWei(gasData.maxPriorityFeePerGas.toString(), 'gwei')),
+                nonce: await web3.eth.getTransactionCount(response.from),
+                chainId: url.CHAIN_ID,
+            }
+            
+            return rawTransaction;
         } catch (error) {
             throw helper.setErrorResponse(error)
         }
@@ -92,7 +113,8 @@ class Uniswap {
 
     async approvalRawTransaction({ fromContractAddress, walletAddress, fromQuantity }) {
         try {
-            const url = await helper.getBaseURL(this.chain);
+            const url = helper.getBaseURL(this.chain);
+
             if (url.error) {
                 throw helper.setErrorResponse(url.error)
             }
@@ -103,8 +125,33 @@ class Uniswap {
                     walletAddress: _walletAddress,
                     fromContractAddress: _fromContractAddress,
                     fromQuantity,
-                }, url);
-            return response;
+                }, 
+                url
+            );
+
+            const web3 = new Web3(new Web3.providers.HttpProvider(url.RPC));
+
+            const gasData = await helper.getGasParams(url.GAS_API, this.chain);
+
+            let output;
+
+            if (response !== true) {
+                output = {
+                    to: response.to,
+                    from: response.from,
+                    data: response.data,
+                    value: Web3.utils.numberToHex(response.value),
+                    gasLimit: response.gas,
+                    maxFeePerGas: Web3.utils.numberToHex(Web3.utils.toWei(gasData.maxFeePerGas, 'gwei')),
+                    maxPriorityFeePerGas: Web3.utils.numberToHex(Web3.utils.toWei(gasData.maxPriorityFeePerGas, 'gwei')),
+                    nonce: await web3.eth.getTransactionCount(response.from),
+                    chainId: url.CHAIN_ID,
+                }
+            } else {
+                output = response
+            }
+            
+            return output;
         } catch (error) {
             throw helper.setErrorResponse(error)
         }
