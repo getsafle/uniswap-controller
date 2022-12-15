@@ -43,6 +43,10 @@
 - Added support for polygon chain
 
 
-### 1.1.0 (2022-09-28)
+### 1.1.1 (2022-09-28)
 
 - Updated method to get list of supported tokens
+
+### 1.1.2 (2022-12-14)
+
+- Functions `approvalRawTransaction()` and `getRawTransaction()` will throw an error `Insufficient balance.` if the `from` address does not have enough assets to swap.

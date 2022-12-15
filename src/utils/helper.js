@@ -205,11 +205,11 @@ const setErrorResponse = (err) => {
         case INVARIANT_ADDRESS:
         case QUOTE_OF_NULL:
         case NULL_ROUTE:
-            return { err, message: TOKEN_PAIR_DOESNOT_EXIST }
+            throw TOKEN_PAIR_DOESNOT_EXIST
         case INSUFFICIENT_BALANCE:
-            return { err, message: INSUFFICIENT_BALANCE }
+            throw INSUFFICIENT_BALANCE
         default:
-            return { err, message: err.message }
+            throw err.message
     }
 }
 
