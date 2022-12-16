@@ -54,3 +54,7 @@
 ### 1.1.3 (2022-12-15)
 
 - Functions `approvalRawTransaction()` and `getRawTransaction()` will return the type2 raw transaction.
+
+### 1.1.4 (2022-12-15)
+
+- Limited the gas params to 4 decimal places in the type2 raw transaction object.
